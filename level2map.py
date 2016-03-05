@@ -4,63 +4,66 @@
 """
 
 import sys
+import os
 import hashlib
 import getopt
-import os
 import json
 from PIL import Image
 
 
 # Start off with some defaults
 dictTest = {
-    "height": 15,
-    "width": 213,
+    "height": -1,
+    "width": -1,
 
-    "tilewidth": 16,
+    "tilewidth": -1,
+    "tileheight": -1,
+
     "version": 1,
+    "nextobjectid": 1,
+    "orientation": "orthogonal",
+    "renderorder": "right-down",
 
     "layers": [{
-        "data": [],
-        
-        "height": 15,
-        "width": 213,
+        "data": [],  # we fill this up...
+
+        "height": -1,
+        "width": -1,
 
         "name": "Tile Layer 1",
         "opacity": 1,
         "type": "tilelayer",
         "visible": True,
-        
+
         "x": 0,
         "y": 0
     }],
-    "nextobjectid": 1,
-    "orientation": "orthogonal",
-    "renderorder": "right-down",
-    "tileheight": 16,
-
+    
     "tilesets": [{
         "columns": 8,
         "firstgid": 1,
-        "image": "pythonMap2Atlas/tpTest.png",
+        "image": "",
         "imageheight": 128,
         "imagewidth": 128,
         "margin": 0,
         "name": "tpTest",
-                "spacing": 0,
-                "tilecount": 64,
-                "tileheight": 16,
-                "tilewidth": 16
+        "spacing": 0,
+        "tilecount": 64,
+        "tileheight": 16,
+        "tilewidth": 16
     }]
 }
 
 
 def main(argv=None):
 
-    if len(sys.argv) == 4:
+    if len(sys.argv) == 6:
 
         rawMap = Image.open(sys.argv[1])
         outputDir = sys.argv[2]
-        tileSize = int(sys.argv[3])
+        tiledFile = sys.argv[3]
+        texturePackerSheet = sys.argv[4]
+        tileSize = int(sys.argv[5])
 
         try:
             os.makedirs(outputDir)
@@ -82,13 +85,10 @@ def main(argv=None):
         numCols = rawMapWidth / tileSize
         numRows = rawMapHeight / tileSize
 
-        # dictTest['layers'][0]['data'] = [5,1,5,1,5,1]
-
         print('Total Tiles: %s' %
               str(rawMapWidth / tileSize * rawMapHeight * tileSize)
               )
 
-        
         for y in range(0, numRows):
             for x in range(0, numCols):
 
@@ -104,14 +104,9 @@ def main(argv=None):
                 tileHash = hashlib.md5(tileString).hexdigest()
 
                 if not tileHash in uniqueTiles:
+                    # texturePacker needs leading zeros to properly put tiles
+                    # in order
                     fileName = str(tileNameIndex).zfill(4)
-
-                    # if tileNameIndex < 10
-                    #     fileName = 
-                    # else if tileNameIndex < 100
-                    #     fileName = str(tileNameIndex).zfill(3)
-                    # else if tileNameIndex < 1000
-                    #     fileName = str(tileNameIndex).zfill(2)
 
                     tile.save(outputDir + '/%s.png' % (fileName))
                     uniqueTiles[tileHash] = [tileNameIndex, tile]
@@ -120,13 +115,24 @@ def main(argv=None):
                     pass
 
                 tileIndex = uniqueTiles[tileHash][0]
+
+                # Only using 1 layer
+                dictTest['tilewidth'] = tileSize
+                dictTest['tileheight'] = tileSize
+                dictTest['width'] = numCols
+                dictTest['height'] = numRows
+                dictTest['layers'][0]['width'] = numCols
+                dictTest['layers'][0]['height'] = numRows
+
                 dictTest['layers'][0]['data'].append(tileIndex)
+                
+                # //'layers'][0]['data'].append(tileIndex)
+
+                dictTest['tilesets'][0]['image'] = texturePackerSheet
 
         # print("Unique Tiles Found: %s" % (len(uniqueTiles)))
-        print("Finished Script")
-
-        # write out data
-        obj = open('../mytest.json', 'wb')
+        # write out Tiled data file
+        obj = open(tiledFile, 'wb')
         jsonOut = json.dumps(dictTest)
         obj.write(jsonOut)
         obj.close()

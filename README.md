@@ -12,7 +12,7 @@ The map you downloaded may have stichting issues. For example, a row of pixels m
  
 #### 3. Run level2map
 ```sh
-$ python level2map inputImage.png outputDir/ 32 32
+$ python level2map.py level.png outputDir/ data/myJson.json outputSheet.png 16
 ```
 The tool will scan the image and find all unique tiles and place them in tileOutputDir.
 
