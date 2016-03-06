@@ -65,15 +65,14 @@ def main(argv=None):
         splitTilesFolder = '.temp/'
         tileSheetFileName = 'tileSheet.png'
 
-        
-        
-
         try:
             os.makedirs(dataFolder)
             os.makedirs(splitTilesFolder)
-            print ('did it')
         except OSError as exception:
             pass
+
+        # Need to clear out the temp folder
+        os.system('rm .temp/*.png')
 
         # Start with 1 since Tiled program uses 0 as empty cell
         tileNameIndex = 1
