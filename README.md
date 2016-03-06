@@ -1,5 +1,9 @@
-## level2map
+# level2map
 Purpose of this repository is to convert a single image of a 2D level into a complete map (tilesheet image anlong with data file).
+
+## Dependencies
+	* Python
+	* TexturePacker command line
 
 Levels can be downloaded from [http://vgmaps.com/].
 
