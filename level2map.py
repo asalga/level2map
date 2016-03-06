@@ -10,7 +10,6 @@ import getopt
 import json
 from PIL import Image
 
-
 # Start off with some defaults
 dictTest = {
     "height": -1,
@@ -38,7 +37,7 @@ dictTest = {
         "x": 0,
         "y": 0
     }],
-    
+
     "tilesets": [{
         "columns": 8,
         "firstgid": 1,
@@ -54,19 +53,25 @@ dictTest = {
     }]
 }
 
-
 def main(argv=None):
 
-    if len(sys.argv) == 6:
+    if len(sys.argv) == 4:
 
         rawMap = Image.open(sys.argv[1])
-        outputDir = sys.argv[2]
-        tiledFile = sys.argv[3]
-        texturePackerSheet = sys.argv[4]
-        tileSize = int(sys.argv[5])
+        dataFolder = sys.argv[2]
+        #texturePackerSheet = sys.argv[3]
+        tileSize = int(sys.argv[3])
+
+        splitTilesFolder = '.temp/'
+        tileSheetFileName = 'tileSheet.png'
+
+        
+        
 
         try:
-            os.makedirs(outputDir)
+            os.makedirs(dataFolder)
+            os.makedirs(splitTilesFolder)
+            print ('did it')
         except OSError as exception:
             pass
 
@@ -75,7 +80,7 @@ def main(argv=None):
 
         rawMapWidth, rawMapHeight = rawMap.size
 
-        print('Raw map dimensions: [%s, %s]' % (rawMapWidth, rawMapHeight))
+       # print('Raw map dimensions: [%s, %s]' % (rawMapWidth, rawMapHeight))
 
         uniqueTiles = {}
 
@@ -108,7 +113,7 @@ def main(argv=None):
                     # in order
                     fileName = str(tileNameIndex).zfill(4)
 
-                    tile.save(outputDir + '/%s.png' % (fileName))
+                    tile.save(splitTilesFolder + '/%s.png' % (fileName))
                     uniqueTiles[tileHash] = [tileNameIndex, tile]
                     tileNameIndex += 1
                 else:
@@ -123,19 +128,31 @@ def main(argv=None):
                 dictTest['height'] = numRows
                 dictTest['layers'][0]['width'] = numCols
                 dictTest['layers'][0]['height'] = numRows
-
                 dictTest['layers'][0]['data'].append(tileIndex)
-                
                 # //'layers'][0]['data'].append(tileIndex)
+                dictTest['tilesets'][0]['image'] = tileSheetFileName
 
-                dictTest['tilesets'][0]['image'] = texturePackerSheet
-
-        # print("Unique Tiles Found: %s" % (len(uniqueTiles)))
+        print("Unique Tiles Found: %s" % (len(uniqueTiles)))
+        
         # write out Tiled data file
-        obj = open(tiledFile, 'wb')
+        obj = open('data/data.json', 'wb')
         jsonOut = json.dumps(dictTest)
         obj.write(jsonOut)
         obj.close()
+
+        texturePackerCommand = ''.join(['TexturePacker ',
+                                        ' --sheet ', dataFolder, '/', tileSheetFileName, ' ',
+                                        splitTilesFolder,
+                                        ' --trim-mode None',
+                                        ' --shape-padding 0',
+                                        ' --border-padding 0',
+                                        ' --size-constraints POT',
+                                        ' --basic-sort-by Name --algorithm Basic'
+                                        ' --quiet'
+                                        ])
+
+        os.system(texturePackerCommand)
+        os.system('rm out.plist')
 
 if __name__ == "__main__":
     sys.exit(main())
