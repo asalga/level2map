@@ -19,5 +19,7 @@ The tool will scan the leve.png image and find all unique tiles and place them i
 #### 4. Open Tiled
 Open Tiled and load the data file from level2map.
 
+![Image of Tiled](https://github.com/asalga/level2map/readme/example.png)
+
 ### Version
 1.0
