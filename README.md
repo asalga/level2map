@@ -16,7 +16,7 @@ $ python level2map.py level.png data/ 16
 ```
 The tool will scan the leve.png image and find all unique tiles and place them in a temporary directory. It will then execute TexturePacker and place data file and tilesheet in your data/ directory.
 
-### 4. Open Tiled
+#### 4. Open Tiled
 Open Tiled and load the data file from level2map.
 
 ### Version
