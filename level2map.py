@@ -1,6 +1,6 @@
 """
     Purpose of this script is to convert a map from vgmaps
-    into a unique set of tiles and an atlas.
+    into a unique set of tiles and an atlas for Tiled
 """
 
 import sys
@@ -9,6 +9,7 @@ import hashlib
 import getopt
 import json
 from PIL import Image
+
 
 # Start off with some defaults. Any -1 or null value will be
 # populated by our script before writing out the data file.
@@ -48,11 +49,9 @@ dataForTiled = {
         "tileheight": -1,
         "tilewidth": -1,
         "tilecount": -1,
-
-        "imageheight": 128,
-        "imagewidth": 128,
-
-        "columns": 8
+        "imageheight": -1,
+        "imagewidth": -1,
+        "columns": -1
     }]
 }
 
@@ -76,13 +75,15 @@ def main(argv=None):
         dataFileName = 'data.json'
         # texPackDatFile = 'tpData.plist'
 
-        texPathDataPath = ''.join([dataFolder, '/', 'tpData.plist'])
+        texPackDataPath = ''.join([dataFolder, '/', 'tpData.plist'])
         texPackSheetPath = ''.join([dataFolder, '/', tileSheetFileName])
 
         try:
             os.makedirs(dataFolder)
             os.makedirs(splitTilesFolder)
         except OSError as exception:
+            # print 'Error creating directory'
+            # print exception
             pass
 
         # Clear out the temp folder in case we had other tiles there
@@ -142,26 +143,19 @@ def main(argv=None):
         dataForTiled['layers'][0]['width'] = numCols
         dataForTiled['layers'][0]['height'] = numRows
         dataForTiled['tilesets'][0]['image'] = tileSheetFileName
-        dataForTiled['tilesets'][0]['name'] = ''.join(['tileSheet_', sys.argv[1]])
+        dataForTiled['tilesets'][0]['name'] = ''.join(
+            ['tileSheet_', sys.argv[1]])
         dataForTiled['tilesets'][0]['tileheight'] = tileSize
         dataForTiled['tilesets'][0]['tilewidth'] = tileSize
         dataForTiled['tilesets'][0]['tilecount'] = len(uniqueTiles)
 
-        # We can use this as long we are using size-constraint in TexturePacker command
-        # print nextPOT
-        # Get data from plist
-        texPackDatFile = open(texPathDataPath, 'r')
-        
-
-
-        # Need to get the dimensions from texutrePacker plist file
 
         # print("Unique Tiles Found: %s" % (len(uniqueTiles)))
 
         # Creates the tilesheet and texturePacker data file
         texturePackerCommand = ''.join(['TexturePacker ',
                                         ' --sheet ', texPackSheetPath,
-                                        ' --data ', texPathDataPath,
+                                        ' --data ', texPackDataPath,
                                         ' ', splitTilesFolder,
                                         ' --trim-mode None',
                                         ' --format json-array',
@@ -174,6 +168,23 @@ def main(argv=None):
                                         ])
 
         os.system(texturePackerCommand)
+
+        # Once the texturePacker tileshet and data file have been written
+        # we can find out the dimensions of the tilesheet
+        # We can use this as long we are using size-constraint in TexturePacker command
+        # print nextPOT
+        # Get data from plist
+        print texPackDataPath
+        texPackDatFile = open(texPackDataPath, 'r')
+        texPackData = json.loads(texPackDatFile.read())         
+        texPackDatFile.close()
+
+        tileSheetWidth = texPackData['meta']['size']['w']
+        tileSheetHeight = texPackData['meta']['size']['h']
+
+        dataForTiled['tilesets'][0]['imageheight'] = tileSheetWidth
+        dataForTiled['tilesets'][0]['imagewidth'] = tileSheetHeight
+        dataForTiled['tilesets'][0]['columns'] = tileSheetHeight/tileSize
 
         # Write the data file for Tiled
         tiledFile = ''.join([dataFolder, '/', dataFileName])
